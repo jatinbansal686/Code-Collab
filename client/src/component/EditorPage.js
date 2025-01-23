@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Client from "./Client";
+import Editor from "./Editor";
 
 function EditorPage() {
   const [clients, setClient] = useState([
@@ -35,7 +36,7 @@ function EditorPage() {
           </div>
         </div>
         <div className="col-md-10 text-light d-flex flex-column h-100">
-          editor
+          <Editor />
         </div>
       </div>
     </div>
