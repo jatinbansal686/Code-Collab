@@ -13,7 +13,7 @@ import {
 function Editor({ socketRef, roomId, editorRef }) {
   useEffect(() => {
     const startState = EditorState.create({
-      doc: "// Write your Java code here",
+      doc: '// Write your Java code here\npublic class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, World!");\n  }\n}',
       extensions: [
         history(),
         java(),

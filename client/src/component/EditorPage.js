@@ -35,6 +35,15 @@ function EditorPage() {
         username: location.state?.username,
       });
 
+      socketRef.current.on("initialCode", ({ code }) => {
+        const editor = editorRef.current?.view; // Access the editor view
+        if (editor) {
+          editor.dispatch({
+            changes: { from: 0, to: editor.state.doc.length, insert: code },
+          });
+        }
+      });
+
       socketRef.current.on("joined", ({ clients, username, socketId }) => {
         if (username !== location.state?.username) {
           toast.success(`${username} joined`);
@@ -65,6 +74,7 @@ function EditorPage() {
 
     return () => {
       socketRef.current.disconnect();
+      socketRef.current.off("initialCode");
       socketRef.current.off("joined");
       socketRef.current.off("disconnected");
       socketRef.current.off("codeChange");
