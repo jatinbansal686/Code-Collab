@@ -2,26 +2,78 @@ import React, { useEffect, useRef, useState } from "react";
 import Client from "./Client";
 import Editor from "./Editor";
 import { intiSocket } from "../socket";
-import { useLocation, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  useParams,
+  Navigate,
+} from "react-router-dom";
+import toast from "react-hot-toast";
 
 function EditorPage() {
+  const [clients, setClient] = useState([]);
   const socketRef = useRef(null);
+  const editorRef = useRef(null); // Define editorRef
   const location = useLocation();
   const { roomId } = useParams();
+  const navigate = useNavigate();
+
   useEffect(() => {
     const init = async () => {
       socketRef.current = await intiSocket();
+      socketRef.current.on("connect_error", (err) => handleError(err));
+      socketRef.current.on("connect_failed", (err) => handleError(err));
+
+      const handleError = (e) => {
+        console.log("socket error ", e);
+        toast.error("Socket connection failed");
+        navigate("/");
+      };
+
       socketRef.current.emit("join", {
         roomId,
         username: location.state?.username,
       });
+
+      socketRef.current.on("joined", ({ clients, username, socketId }) => {
+        if (username !== location.state?.username) {
+          toast.success(`${username} joined`);
+        }
+        setClient(clients);
+      });
+
+      socketRef.current.on("disconnected", ({ socketId, username }) => {
+        toast.success(`${username} leave`);
+        setClient((prev) => {
+          return prev.filter((client) => client.socketId != socketId);
+        });
+      });
+
+      socketRef.current.on("codeChange", ({ code }) => {
+        const editor = editorRef.current?.view; // Access the editor view
+        if (editor) {
+          const currentCode = editor.state.doc.toString();
+          if (currentCode !== code) {
+            editor.dispatch({
+              changes: { from: 0, to: editor.state.doc.length, insert: code },
+            });
+          }
+        }
+      });
     };
     init();
+
+    return () => {
+      socketRef.current.disconnect();
+      socketRef.current.off("joined");
+      socketRef.current.off("disconnected");
+      socketRef.current.off("codeChange");
+    };
   }, []);
-  const [clients, setClient] = useState([
-    { socketId: 1, username: "jatin" },
-    { socketId: 2, username: "gourvi" },
-  ]);
+
+  if (!location.state) {
+    return <Navigate to="/" />;
+  }
 
   return (
     <div className="container-fluid vh-100">
@@ -51,7 +103,7 @@ function EditorPage() {
           </div>
         </div>
         <div className="col-md-10 text-light d-flex flex-column h-100">
-          <Editor />
+          <Editor socketRef={socketRef} roomId={roomId} editorRef={editorRef} />
         </div>
       </div>
     </div>

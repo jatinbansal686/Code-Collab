@@ -1,14 +1,16 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { java } from "@codemirror/lang-java";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { defaultKeymap, history } from "@codemirror/commands";
-import { autocompletion } from "@codemirror/autocomplete";
-import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
+import {
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+} from "@codemirror/autocomplete";
 
-function Editor() {
-  const editorRef = useRef();
+function Editor({ socketRef, roomId, editorRef }) {
   useEffect(() => {
     const startState = EditorState.create({
       doc: "// Write your Java code here",
@@ -27,13 +29,24 @@ function Editor() {
     const view = new EditorView({
       state: startState,
       parent: editorRef.current,
+      dispatch: (tr) => {
+        view.update([tr]);
+        if (tr.docChanged) {
+          const code = tr.newDoc.toString();
+          socketRef.current.emit("codeChange", { roomId, code });
+        }
+      },
     });
 
+    // Attach the view to the ref
+    editorRef.current.view = view;
+
     return () => view.destroy();
-  }, []);
+  }, [socketRef, roomId, editorRef]);
 
   return (
     <div
+      id="realtimeEditor"
       ref={editorRef}
       style={{
         height: "100vh",
@@ -43,4 +56,5 @@ function Editor() {
     />
   );
 }
+
 export default Editor;
