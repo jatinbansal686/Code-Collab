@@ -85,6 +85,19 @@ function EditorPage() {
     return <Navigate to="/" />;
   }
 
+  const copyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(roomId);
+      toast.success("Room id is copied");
+    } catch (error) {
+      toast.error("unable to copy roomId");
+    }
+  };
+
+  const leaveRoom = () => {
+    navigate("/");
+  };
+
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
@@ -106,8 +119,13 @@ function EditorPage() {
           </div>
           <div className="mt-auto">
             <hr />
-            <button className="btn btn-success">Copy Room Id</button>
-            <button className="btn btn-danger mt-2 mb-2 px-3 btn-block">
+            <button onClick={copyRoomId} className="btn btn-success">
+              Copy Room Id
+            </button>
+            <button
+              onClick={leaveRoom}
+              className="btn btn-danger mt-2 mb-2 px-3 btn-block"
+            >
               Leave Room
             </button>
           </div>

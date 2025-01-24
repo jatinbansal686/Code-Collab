@@ -27,7 +27,9 @@ io.on("connection", (socket) => {
     socket.join(roomId);
 
     // Send the latest code to the new user
-    const latestCode = roomCodeMap[roomId] || "// Write your Java code here\npublic class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello, World!\");\n  }\n}";
+    const latestCode =
+      roomCodeMap[roomId] ||
+      '// Write your Java code here\npublic class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, World!");\n  }\n}';
     socket.emit("initialCode", { code: latestCode });
 
     const clients = getAllConnectedClients(roomId);
